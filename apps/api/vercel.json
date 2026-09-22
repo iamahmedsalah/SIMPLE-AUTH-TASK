@@ -3,7 +3,7 @@
   "version": 2,
   "framework": null,
 
-  "installCommand": "pnpm install --frozen-lockfile",
+  "installCommand": "pnpm install --frozen-lockfile --prod=false",
   "buildCommand": "pnpm --filter @fst/validation build && pnpm --filter @fst/api build && pnpm --filter @fst/api bundle:workspace",
 
   "functions": {

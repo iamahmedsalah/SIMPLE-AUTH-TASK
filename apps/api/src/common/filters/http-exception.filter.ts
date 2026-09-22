@@ -36,7 +36,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
     if (!isHttp || statusCode >= 500) {
       this.logger.error(
-        { err: exception, requestId, method: request.method, path: request.originalUrl },
+        { err: exception, requestId, method: request.method, path: request.originalUrl ?? request.url },
         'Unexpected request failure',
       );
     }

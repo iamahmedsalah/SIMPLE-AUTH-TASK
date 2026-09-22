@@ -125,7 +125,9 @@ export class AuthService {
     }
 
     const payload: JwtPayload = { sub: String(user._id), authVersion: user.authVersion };
-    const token = await this.jwt.signAsync(payload, { expiresIn: this.jwtExpiresInSeconds });
+    const token = await this.jwt.signAsync<JwtPayload>(payload, {
+      expiresIn: this.jwtExpiresInSeconds,
+    });
     return { token, user: toPublicUser(user) };
   }
 
