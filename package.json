@@ -1,0 +1,31 @@
+{
+  "name": "fst-simple-auth",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "predev": "pnpm --filter @fst/validation build",
+    "dev": "pnpm build && pnpm --parallel --filter @fst/api --filter @fst/web start",
+    "dev:watch": "pnpm --parallel --filter @fst/api --filter @fst/web dev",
+    "build": "pnpm -r build",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck",
+    "pretest": "pnpm --filter @fst/validation build",
+    "test": "pnpm -r test",
+    "test:e2e": "pnpm --filter @fst/api test:e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.35.0",
+    "concurrently": "^9.2.1",
+    "eslint": "^9.35.0",
+    "globals": "^16.3.0",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.2",
+    "typescript-eslint": "^8.42.0"
+  }
+}

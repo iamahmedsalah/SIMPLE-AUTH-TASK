@@ -1,0 +1,25 @@
+interface:
+  display_name: full stack engineering
+  short_description: 'Senior full-stack engineering skill for designing, implementing,
+    reviewing,
+
+    debugging, securing, testing, and optimizing production-ready applications
+
+    using React, TypeScript, Vite, Tailwind CSS, shadcn/ui, Motion for React,
+
+    React Hook Form, Zod, TanStack Query, NestJS, MongoDB, Mongoose, JWT,
+
+    Argon2id, Nodemailer/SMTP, Pino, Swagger, and modern engineering practices.
+
+    Use for end-to-end features, frontend/backend integration, authentication,
+
+    architecture, UI/UX, APIs, security, performance, testing, and production readiness.'
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true
