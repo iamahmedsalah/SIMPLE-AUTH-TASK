@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { IncomingMessage } from 'node:http';
 import { MiddlewareConsumer, Module, type NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
@@ -25,7 +26,7 @@ import { HealthModule } from './modules/health/health.module';
       useFactory: (config: ConfigService<AppConfiguration, true>) => ({
         pinoHttp: {
           level: config.get('app.logLevel', { infer: true }),
-          genReqId: (request) => {
+          genReqId: (request: IncomingMessage) => {
             const header = request.headers['x-request-id'];
             return typeof header === 'string' && header.length <= 128 ? header : randomUUID();
           },

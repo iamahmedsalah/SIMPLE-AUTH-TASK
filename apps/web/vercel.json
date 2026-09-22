@@ -7,7 +7,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://https://simple-auth-api-seven.vercel.app/api/:path*"
+      "destination": "https://simple-auth-api-seven.vercel.app/api/:path*"
     },
     {
       "source": "/((?!api/).*)",

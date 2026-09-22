@@ -1,3 +1,4 @@
+import type { ServerResponse } from 'node:http';
 import {
   ArgumentsHost,
   Catch,
@@ -26,7 +27,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const statusCode = isHttp ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
     const raw = isHttp ? exception.getResponse() : undefined;
     const body: KnownErrorBody = typeof raw === 'object' && raw !== null ? raw : {};
-    const requestId = response.getHeader('x-request-id')?.toString();
+    const serverResponse = response as unknown as ServerResponse;
+    const header =
+      typeof serverResponse.getHeader === 'function'
+        ? serverResponse.getHeader('x-request-id')
+        : undefined;
+    const requestId = typeof header === 'string' ? header : undefined;
 
     if (!isHttp || statusCode >= 500) {
       this.logger.error(

@@ -1,8 +1,15 @@
-﻿name: CI / CD
+name: CI / CD
 
 on:
   push:
+    branches:
+      - master
+      - main
   pull_request:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -70,7 +77,7 @@ jobs:
   deploy-api:
     name: Deploy API to Vercel
     needs: quality
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:
@@ -123,8 +130,8 @@ jobs:
   #   VERCEL_WEB_PROJECT_ID - web project ID (Vercel project > Settings > General)
   deploy-web:
     name: Deploy Web to Vercel
-    needs: [quality, deploy-api]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: quality
+    if: (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment:

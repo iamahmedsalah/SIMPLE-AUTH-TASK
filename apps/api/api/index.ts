@@ -1,4 +1,4 @@
-/**
+ï»¿/**
  * Vercel Serverless Function entry point for the NestJS API.
  *
  * Vercel runs stateless, short-lived Node.js functions. To avoid creating a new
@@ -7,7 +7,7 @@
  *
  * Key differences from main.ts:
  *  - Uses ExpressAdapter so we can access the raw Express app
- *  - Calls app.init() instead of app.listen() — Vercel handles the HTTP listener
+ *  - Calls app.init() instead of app.listen() - Vercel handles the HTTP listener
  *  - Disables shutdown hooks (no SIGTERM in serverless)
  *  - Disables Swagger in production to reduce cold-start payload
  */
@@ -33,10 +33,10 @@ async function getServer(): Promise<Express> {
 
   await app.init();
   cachedServer = expressApp;
-  return cachedServer;
+  return expressApp;
 }
 
 export default async function handler(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const server = await getServer();
-  server(req, res);
+  (server as (req: IncomingMessage, res: ServerResponse) => void)(req, res);
 }
