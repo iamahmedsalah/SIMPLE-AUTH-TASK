@@ -74,7 +74,7 @@ MongoDB listens on `27017`. Mailpit provides SMTP on `1025` and its local email 
 ## Development
 
 ```bash
-pnpm dev
+pnpm dev:watch
 ```
 
 Frontend: `http://localhost:5173`. API: `http://localhost:3000`. Vite proxies `/api` to the API in development. Vite and the API print secret-free development banners in their terminals, and the browser console shows a development-only marker. The API banner appears only after configuration, MongoDB connection, and HTTP listen succeed.

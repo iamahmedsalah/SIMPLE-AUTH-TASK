@@ -2,14 +2,21 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "framework": null,
+
   "installCommand": "pnpm install --frozen-lockfile",
-  "buildCommand": "pnpm --filter @fst/validation build && pnpm --filter @fst/api build",
+  "buildCommand": "pnpm --filter @fst/api... build",
+
   "functions": {
     "api/index.ts": {
-      "maxDuration": 30
+      "maxDuration": 30,
+      "includeFiles": "packages/validation/dist/**"
     }
   },
+
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index" }
+    {
+      "source": "/(.*)",
+      "destination": "/api/index"
+    }
   ]
 }
