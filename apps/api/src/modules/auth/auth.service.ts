@@ -58,6 +58,9 @@ export class AuthService {
     input: SignUpInput,
   ): Promise<{ user: PublicUser; message: string; emailSent: boolean }> {
     const email = normalizeEmail(input.email);
+
+    // Fast index-only check — avoids running expensive argon2 hash on duplicate emails.
+    // The duplicate-key catch below remains as a race guard for concurrent signups.
     if (await this.users.exists({ email })) {
       throw new ConflictException({
         statusCode: 409,
@@ -202,13 +205,18 @@ export class AuthService {
     lifetimeMs: number,
   ): Promise<string> {
     const rawToken = randomBytes(32).toString('base64url');
-    await this.tokens.deleteMany({ userId, type });
-    await this.tokens.create({
-      userId,
-      type,
-      tokenHash: hashToken(rawToken),
-      expiresAt: new Date(Date.now() + lifetimeMs),
-    });
+    // Single atomic upsert — replaces any existing token for this user+type in one
+    // round-trip, eliminating the deleteMany+create race window.
+    await this.tokens.findOneAndReplace(
+      { userId, type },
+      {
+        userId,
+        type,
+        tokenHash: hashToken(rawToken),
+        expiresAt: new Date(Date.now() + lifetimeMs),
+      },
+      { upsert: true },
+    );
     return rawToken;
   }
 

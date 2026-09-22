@@ -40,7 +40,12 @@ export class AuthGuard implements CanActivate {
       throw unauthorized();
     }
 
-    const user = await this.users.findById(payload.sub).select('+authVersion').exec();
+    // .lean() skips Mongoose document hydration — 2-5x faster for this read-only guard check.
+    const user = await this.users
+      .findById(payload.sub)
+      .select('+authVersion name email emailVerifiedAt createdAt')
+      .lean<UserDocument>()
+      .exec();
     if (!user || user.authVersion !== payload.authVersion) throw unauthorized();
     request.user = user;
     return true;

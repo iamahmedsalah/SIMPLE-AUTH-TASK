@@ -36,8 +36,10 @@ export function useLogout() {
   return useMutation({
     mutationFn: logout,
     onSettled: () => {
+      // setQueryData(null) clears the user immediately — no need for invalidateQueries
+      // which would fire a background GET /auth/me that returns 401 and is swallowed.
       client.setQueryData(authKeys.currentUser, null);
-      void client.invalidateQueries({ queryKey: authKeys.currentUser });
+      client.removeQueries({ queryKey: authKeys.currentUser });
     },
   });
 }
