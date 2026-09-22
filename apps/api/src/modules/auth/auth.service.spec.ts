@@ -32,9 +32,9 @@ function setup() {
     findByIdAndUpdate: jest.fn(),
   };
   const tokens = {
-    deleteMany: jest.fn().mockResolvedValue({ deletedCount: 1 }),
-    create: jest.fn().mockResolvedValue({}),
+    findOneAndReplace: jest.fn().mockResolvedValue({}),
     findOneAndDelete: jest.fn(),
+    deleteMany: jest.fn().mockResolvedValue({ deletedCount: 1 }),
   };
   const jwt = { signAsync: jest.fn().mockResolvedValue('signed.jwt') };
   const email = { sendVerificationEmail: jest.fn(), sendPasswordResetEmail: jest.fn() };
@@ -71,7 +71,7 @@ describe('AuthService', () => {
     expect(created.email).toBe('ahmed@example.com');
     expect(created.passwordHash).not.toBe('Secure1!');
     expect(await argon2.verify(created.passwordHash, 'Secure1!')).toBe(true);
-    const stored = tokens.create.mock.calls[0]?.[0] as { tokenHash: string };
+    const stored = tokens.findOneAndReplace.mock.calls[0]?.[1] as { tokenHash: string };
     const raw = email.sendVerificationEmail.mock.calls[0]?.[2] as string;
     expect(raw).not.toContain(stored.tokenHash);
     expect(stored.tokenHash).toMatch(/^[a-f0-9]{64}$/);
@@ -94,7 +94,7 @@ describe('AuthService', () => {
 
     expect(result.emailSent).toBe(false);
     expect(result.message).toContain('could not be delivered');
-    expect(tokens.create).toHaveBeenCalled();
+    expect(tokens.findOneAndReplace).toHaveBeenCalled();
     expect(users.create).toHaveBeenCalled();
   });
 
@@ -155,7 +155,7 @@ describe('AuthService', () => {
     await expect(service.forgotPassword({ email: 'missing@example.com' })).resolves.toEqual({
       message: 'If an account exists for this email, a reset link has been sent.',
     });
-    expect(tokens.create).not.toHaveBeenCalled();
+    expect(tokens.findOneAndReplace).not.toHaveBeenCalled();
     expect(email.sendPasswordResetEmail).not.toHaveBeenCalled();
   });
 
