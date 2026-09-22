@@ -8,8 +8,8 @@
   },
   "scripts": {
     "predev": "pnpm --filter @fst/validation build",
-    "dev": "pnpm build && pnpm --parallel --filter @fst/api --filter @fst/web start",
-    "dev:watch": "pnpm --parallel --filter @fst/api --filter @fst/web dev",
+    "dev": "kill-port 3000 5173 && pnpm build && pnpm --parallel --filter @fst/api --filter @fst/web start",
+    "dev:watch": "kill-port 3000 5173 && pnpm --parallel --filter @fst/api --filter @fst/web dev",
     "build": "pnpm -r build",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
@@ -24,6 +24,7 @@
     "concurrently": "^9.2.1",
     "eslint": "^9.35.0",
     "globals": "^16.3.0",
+    "kill-port": "^2.0.1",
     "prettier": "^3.6.2",
     "typescript": "^5.9.2",
     "typescript-eslint": "^8.42.0"

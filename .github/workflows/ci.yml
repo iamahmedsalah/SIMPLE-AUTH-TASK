@@ -1,4 +1,4 @@
-name: CI
+﻿name: CI / CD
 
 on:
   push:
@@ -8,21 +8,159 @@ permissions:
   contents: read
 
 jobs:
+  # Quality Gate — runs on every push and PR
   quality:
+    name: Lint · Typecheck · Test · Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+
       - uses: pnpm/action-setup@v4
         with:
           version: 11.9.0
+
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm lint
-      - run: pnpm typecheck
-      - run: pnpm test
-      - run: pnpm build
-      - run: pnpm test:e2e
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+      - name: E2E tests
+        run: pnpm test:e2e
+        env:
+          NODE_ENV: test
+          PORT: 3000
+          MONGODB_URI: ${{ secrets.TEST_MONGODB_URI }}
+          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
+          JWT_EXPIRES_IN: 15m
+          FRONTEND_URL: http://localhost:5173
+          SMTP_HOST: localhost
+          SMTP_PORT: 1025
+          SMTP_SECURE: false
+          COOKIE_NAME: fst_auth
+
+  # ─── Deploy API ───────────────────────────────────────────────────────────
+  # Deploys apps/api to Vercel as a serverless function.
+  # Only runs on main-branch pushes after quality passes.
+  #
+  # Required GitHub Secrets:
+  #   VERCEL_TOKEN          - Vercel personal access token
+  #   VERCEL_ORG_ID         - Vercel org/user ID (Vercel dashboard > Settings > General)
+  #   VERCEL_API_PROJECT_ID - API project ID (Vercel project > Settings > General)
+  #
+  # Required Vercel env vars (set in Vercel dashboard for the API project):
+  #   NODE_ENV, PORT, MONGODB_URI, JWT_SECRET, JWT_EXPIRES_IN, FRONTEND_URL,
+  #   SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, SMTP_FROM,
+  #   SWAGGER_ENABLED, LOG_LEVEL, COOKIE_NAME, DNS_SERVERS
+  deploy-api:
+    name: Deploy API to Vercel
+    needs: quality
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    outputs:
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/api
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_API_PROJECT_ID }}
+
+      - name: Deploy API
+        id: deploy
+        run: |
+          url=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tail -1)
+          echo "url=$url" >> $GITHUB_OUTPUT
+        working-directory: apps/api
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_API_PROJECT_ID }}
+
+  # ─── Deploy Web ───────────────────────────────────────────────────────────
+  # Deploys apps/web to Vercel as a static SPA.
+  # Waits for deploy-api so the API URL is available if needed.
+  #
+  # Required GitHub Secrets:
+  #   VERCEL_TOKEN          - same token as above
+  #   VERCEL_ORG_ID         - same org as above
+  #   VERCEL_WEB_PROJECT_ID - web project ID (Vercel project > Settings > General)
+  deploy-web:
+    name: Deploy Web to Vercel
+    needs: [quality, deploy-api]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: apps/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEB_PROJECT_ID }}
+
+      - name: Deploy Web
+        id: deploy
+        run: |
+          url=$(vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }} 2>&1 | tail -1)
+          echo "url=$url" >> $GITHUB_OUTPUT
+        working-directory: apps/web
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEB_PROJECT_ID }}
